@@ -8,43 +8,61 @@ public class CellularAutomata : MonoBehaviour {
     public int width = 25;
     public int height = 25;
     public float rateCell = 0.5f;
+    public int modifier;
     public int zLayer = 0;
     public int neigbourhoodDepth = 1;
 
+    public float refreshEvery = 5f;
+
+    private float time;
+
     public GameObject cellPrefab;
 
-    private List<Cell> worldCells = new List<Cell>();
+    public Color alphaCellColor;
+    public Color betaCellColor;
 
+    private List<Cell> worldCells = new List<Cell>();
+    private Texture2D map;
 
 	// Use this for initialization
 	void Start () {
+        map = new Texture2D(width, height);
+        map.filterMode = FilterMode.Point;
+        map.wrapMode = TextureWrapMode.Clamp;
+        map.mipMapBias = 0;
+
+        Sprite generatedSprite = Sprite.Create(map, new Rect(0, 0, width, height), Vector2.zero);
+        GetComponent<SpriteRenderer>().sprite = generatedSprite;
+
         //Create and initialize Cells
         for (int i = 0; i < width* height; i++)
         {
-            GameObject newCell = Instantiate(cellPrefab);
+            //GameObject newCell = Instantiate(cellPrefab);
 
             int cellXcoord = i % width;
             int cellYcoord = i / height;
-            newCell.transform.position = new Vector3(cellXcoord * 0.25f, cellYcoord * 0.25f,zLayer);
-
-            Cell newCellComponent = newCell.GetComponent<Cell>();
-            worldCells.Add(newCellComponent);
-            newCellComponent.coordinates = new Vector2(cellXcoord,cellYcoord);
+            Cell newCell = new Cell(new Vector2(cellXcoord, cellYcoord));
+            worldCells.Add(newCell);
 
 
             //Randomize cell type (should be handled by the cell itself ?)
             float cellType = Random.value;
-            Debug.Log(cellType);
             if (cellType > rateCell)
             {
-                newCellComponent.cellType = true;
+                newCell.cellType = true;
+                map.SetPixel(cellXcoord,cellYcoord,betaCellColor);
             }
+            else
+            {
+                map.SetPixel(cellXcoord, cellYcoord, alphaCellColor);
+            }
+            rateCell = cellType;
         }
-
+        map.Apply();
         //Build neighbours map
         foreach(Cell cell in worldCells)
         {
-            string str = "Debug Cell coord : x " + cell.coordinates.x + " y " + cell.coordinates.y;
+            //string str = "Debug Cell coord : x " + cell.coordinates.x + " y " + cell.coordinates.y;
             for(int i = -neigbourhoodDepth; i <= neigbourhoodDepth; i++)//doit permettre de gérer la profondeur sur des formes quadrillages
             {
                 for (int j = -neigbourhoodDepth; j<= neigbourhoodDepth; j++)
@@ -54,7 +72,7 @@ public class CellularAutomata : MonoBehaviour {
                         int xWrapped = (width + (int)(cell.coordinates.x) + i) % width;
                         int yWrapped = (height + (int)(cell.coordinates.y) + j) % height;
                         int neighbourId = yWrapped * width + xWrapped;
-                        str += "\n neighbour at i " + i + ",j " + j + "as coordinaites : x " + xWrapped + ",y " + yWrapped + " and index : " + neighbourId;
+                        //str += "\n neighbour at i " + i + ",j " + j + "as coordinaites : x " + xWrapped + ",y " + yWrapped + " and index : " + neighbourId;
                         Cell neighbourCell = worldCells[neighbourId];
                         cell.neighbours.Add(neighbourCell);
                     }
@@ -62,31 +80,43 @@ public class CellularAutomata : MonoBehaviour {
             }
             //Debug neighbourhood coordinates wrapping computation
             //Debug.Log(str);
+
         }
-
-
-        /*
-        for (int i = 0; i < width ; i++)
+        foreach (Cell cell in worldCells)
         {
-            for (int j = 0; j < height; j++)
-            {
-                //CreateCell
-                GameObject newCell = Instantiate(cellPrefab);
-                newCell.transform.position = new Vector3(i * 0.25f, j * 0.25f, zLayer);
-
-                //Randomize cell
-                float cellType = Random.Range(0f, 1f);
-                if (cellType > rateCell)
-                {
-                    newCell.GetComponent<SpriteRenderer>().material.color = Color.black;
-                }
-            }
+            cell.InitValues();
         }
-        */
     }
 
     // Update is called once per frame
     void Update () {
-		
-	}
+        time += Time.deltaTime;
+        if (time > refreshEvery)
+        {
+            time = 0;
+            int worldCellCount = worldCells.Count;
+
+            for (int i = 0; i < worldCellCount;i++)
+            {
+                worldCells[i].CheckChange(modifier);
+            }
+
+            for (int i = 0; i < worldCellCount; i++)
+            {
+                Cell currentCell = worldCells[i];
+                if (currentCell.hasToChange)
+                {
+                    currentCell.hasToChange = false;
+                    currentCell.cellType = !currentCell.cellType;
+                    Color newColor = currentCell.cellType ? betaCellColor : alphaCellColor;
+                    map.SetPixel((int)currentCell.coordinates.x, (int)currentCell.coordinates.y, newColor);
+
+
+                    currentCell.NotifyChange(currentCell.cellType);
+                }
+            }
+
+            map.Apply();
+        }
+    }
 }
