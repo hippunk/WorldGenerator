@@ -7,11 +7,12 @@ public class CellularAutomata : MonoBehaviour {
 
     public int width = 25;
     public int height = 25;
-    public float rateCell = 0.5f;
-    public int modifier;
+    public float perinThreshold = 0.5f;
+    public float gaussianThreshold = 0.5f;
+    public int modifier = 4;
     public int zLayer = 0;
     public int neigbourhoodDepth = 1;
-
+    public float scale = 1.0f;
     public float refreshEvery = 5f;
 
     private float time;
@@ -41,13 +42,20 @@ public class CellularAutomata : MonoBehaviour {
 
             int cellXcoord = i % width;
             int cellYcoord = i / height;
+
+
             Cell newCell = new Cell(new Vector2(cellXcoord, cellYcoord));
             worldCells.Add(newCell);
 
 
             //Randomize cell type (should be handled by the cell itself ?)
-            float cellType = Random.value;
-            if (cellType > rateCell)
+            float cellXRat = (float)cellXcoord / width * scale;
+            float cellYRat = (float)cellYcoord / height * scale;
+            //Debug.Log(cellXRat + " " + cellYRat);
+            float cellType = Mathf.PerlinNoise(cellXRat, cellYRat);// Random.value;
+
+            //Debug.Log(cellType);
+            /*if (cellType > perinThreshold)
             {
                 newCell.cellType = true;
                 map.SetPixel(cellXcoord,cellYcoord,betaCellColor);
@@ -55,8 +63,20 @@ public class CellularAutomata : MonoBehaviour {
             else
             {
                 map.SetPixel(cellXcoord, cellYcoord, alphaCellColor);
+            }*/
+
+            cellType = Random.value;// Random.value;
+
+            //Debug.Log(cellType);
+            if (cellType > gaussianThreshold)
+            {
+                newCell.cellType = true;
+                map.SetPixel(cellXcoord, cellYcoord, betaCellColor);
             }
-            rateCell = cellType;
+            else
+            {
+                map.SetPixel(cellXcoord, cellYcoord, alphaCellColor);
+            }
         }
         map.Apply();
         //Build neighbours map

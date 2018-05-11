@@ -248,8 +248,8 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1522963536}
-  - component: {fileID: 1522963535}
   - component: {fileID: 1522963537}
+  - component: {fileID: 1522963535}
   m_Layer: 0
   m_Name: WorldGenerator
   m_TagString: Untagged
@@ -270,14 +270,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 100
   height: 100
-  rateCell: 0.5
-  modifier: 12
+  perinThreshold: 0.5
+  gaussianThreshold: 0.5
+  modifier: 4
   zLayer: 0
-  neigbourhoodDepth: 2
-  refreshEvery: 0.5
-  cellPrefab: {fileID: 1342120299943220, guid: f7e8c4fd645fdf9449df2ad3fddb6868, type: 2}
-  alphaCellColor: {r: 0, g: 0.17241383, b: 1, a: 1}
-  betaCellColor: {r: 0, g: 1, b: 0, a: 1}
+  neigbourhoodDepth: 1
+  scale: 10
+  refreshEvery: 5
+  cellPrefab: {fileID: 0}
+  alphaCellColor: {r: 0, g: 0.006896496, b: 1, a: 1}
+  betaCellColor: {r: 0, g: 1, b: 0.17241383, a: 1}
 --- !u!4 &1522963536
 Transform:
   m_ObjectHideFlags: 0
